@@ -25,10 +25,4 @@ next-env.d.ts
 .DS_Store
 *.tsbuildinfo
 
-# ai agent files (local-only, not part of the app source)
-/AGENTs.md
-/AGENT.md
-/CLAUDE.md
-/.claude/
-/.cursor/
-/.opencode/
+
