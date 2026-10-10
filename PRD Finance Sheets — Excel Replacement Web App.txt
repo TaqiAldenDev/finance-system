@@ -1,0 +1,856 @@
+﻿PRD: Finance Sheets — Excel Replacement Web App
+Oct 10, 2026 · @ghost
+1. Overview
+Finance Sheets (working title) is a bilingual web app on Next.js and Supabase that replaces Microsoft Excel for daily finance work, adding a tamper-proof audit trail, role-based access, and a day-based access rule that Excel cannot enforce.
+Item
+	Detail
+	Product
+	Finance Sheets (working title)
+	Document version
+	0.1 draft
+	Platform
+	Web app, desktop-first, responsive on tablet and mobile
+	Stack
+	Next.js (App Router), TypeScript, Supabase (Postgres, Auth, RLS, Realtime, Storage)
+	Languages
+	English (LTR) and Arabic (RTL)
+	Roles
+	Super Admin, Admin, Staff
+	Primary market
+	Jordan (timezone Asia/Amman, main currency JOD)
+	Vision: every finance entry is made in one controlled place, by a known person, on a known day, and every action leaves a permanent record.
+Core differentiators over Excel:
+* Staff see and edit only the current day. Past days open only through a 1-hour, read-only session.
+* Every operation (login, view, edit, delete, import, export, print) is logged and cannot be altered.
+* Accounts are created only by the Super Admin; there is no public signup.
+* Full English and Arabic interface, with correct right-to-left layout.
+2. Problem, Goals and Success Metrics
+Excel files cannot control who changes finance data, when, or prove what changed, so errors and fraud go undetected and files multiply.
+Problems today
+* No audit trail: nobody can prove who changed a number, or what it was before.
+* No real permissions: anyone with the file can edit any day, including closed days.
+* Version chaos: copies are emailed and edited in parallel.
+* No structure enforcement: formats, categories, and totals depend on each user's discipline.
+* Arabic and English mix poorly in one workbook, especially right-to-left layout.
+Goals
+1. Replace Excel for daily finance entry, with the same speed and familiarity (grid, formulas, import and export).
+2. Make every action traceable to a named user, with old and new values.
+3. Restrict staff to the current day, with a controlled 1-hour read-only window for past days.
+4. Give admins faster review, approval, and reporting than Excel allows.
+5. Deliver a first-class English and Arabic experience.
+Non-goals (v1)
+* Full accounting (general ledger, tax filing, payroll).
+* Public signup or multi-company SaaS tenancy.
+* Native mobile apps.
+* Bank feed integration.
+Success metrics
+Metric
+	Target
+	How measured
+	Excel files still used for daily entry
+	0 within 60 days of launch
+	Admin survey and audit log activity
+	Actions captured in audit log
+	100% of write and view operations
+	Automated test and log reconciliation
+	Staff edits to a past day
+	0
+	RLS test suite and audit log
+	Time to enter a typical day's entries vs Excel
+	Equal or faster
+	Timed pilot with 3 staff
+	Time to close a day (submit to approval)
+	Under 15 minutes
+	Day-close timestamps
+	Critical data-integrity incidents
+	0
+	Incident log
+	User satisfaction (pilot)
+	4 out of 5 or higher
+	Post-pilot survey
+	3. Users and Roles
+Three roles cover the whole organisation, and only the Super Admin can create accounts.
+Role
+	Who they are
+	Main needs
+	Super Admin
+	Owner or IT lead
+	Create and disable accounts, control system settings, see every audit record, guarantee data integrity
+	Admin
+	Finance manager or accountant
+	Review and approve entries, edit any day, close days, run reports, watch staff activity
+	Staff
+	Cashier, data-entry employee
+	Enter and edit today's records quickly, look up a past day when needed
+	Permission matrix
+Capability
+	Super Admin
+	Admin
+	Staff
+	Create, disable, reset user accounts
+	Yes
+	No
+	No
+	Change a user's role
+	Yes
+	No
+	No
+	System settings (currencies, templates, session length)
+	Yes
+	No
+	No
+	View audit log
+	All records
+	Records of staff and own
+	Own actions only
+	Edit today's entries
+	Yes
+	Yes
+	Yes
+	Edit past days
+	Yes
+	Yes (unless day is locked)
+	No
+	View past days
+	Yes
+	Yes
+	1-hour read-only session, reason required
+	Delete entries
+	Yes (soft delete)
+	Yes (soft delete)
+	Soft delete today only, request-based if configured
+	Restore from recycle bin
+	Yes
+	Yes
+	No
+	Close a day (submit)
+	Yes
+	Yes
+	Submit for approval
+	Approve and lock a day
+	Yes
+	Yes
+	No
+	Reopen a locked day
+	Yes
+	No
+	No
+	Import data
+	Yes
+	Yes
+	Today only
+	Export and print
+	Yes
+	Yes
+	Today only, logged
+	Dashboards and reports
+	All
+	All
+	Own daily summary
+	Rules that apply to every role
+* Each user has one email and one password, created by the Super Admin; the user must change the temporary password on first login.
+* A disabled account cannot sign in, but its history stays in the audit log.
+* The language (English or Arabic) is a per-user setting.
+4. Scope
+The MVP delivers the controlled daily sheet, roles, audit trail, and bilingual UI; advanced collaboration and analytics follow in later releases.
+Area
+	MVP (v1.0)
+	Release 1.1
+	Later
+	Accounts and roles
+	Super Admin creates users; three roles; forced password change
+	Optional 2FA for Admin and Super Admin
+	SSO
+	Daily sheets
+	Spreadsheet grid, formulas, copy and paste from Excel, templates
+	Fill-down, conditional formatting
+	Custom macros or scripts
+	Time rules
+	Staff today-only; 1-hour read-only history session
+	Configurable session length
+	Per-branch rules
+	Audit
+	Append-only log, cell history, audit viewer, export
+	Anomaly alerts
+	External log shipping
+	Finance workflow
+	Day submit, approve, lock, carry-forward balances
+	Approval rules by amount
+	Multi-level approvals
+	Import and export
+	.xlsx and .csv import, .xlsx, .csv, PDF export
+	Scheduled email reports
+	API access
+	Languages
+	English LTR and Arabic RTL
+	Arabic-Indic digits option
+	More languages
+	Collaboration
+	Presence indicators
+	Comments and @mentions
+	Real-time co-editing of one cell range
+	Attachments
+	Upload receipts to an entry
+	Preview and OCR
+	Auto-categorise from receipt
+	Reporting
+	Daily and monthly summary, basic dashboard
+	Pivot-style summaries, charts
+	Custom report builder
+	Out of scope for all versions listed
+* Payroll, tax filing, and statutory reporting.
+* Payment processing or bank transfers.
+* Public signup or customer-facing portals.
+* Native iOS and Android apps (the web app is responsive instead).
+5. Key Workflows
+Five workflows define the product: daily work, history access, day close, account provisioning, and audit review.
+W1. Staff daily work
+1. Staff signs in with the email and password the Super Admin created.
+2. The app opens today's sheet, built from the active template with the previous day's closing balances.
+3. Staff enters or pastes rows; formulas, validation, and totals update live.
+4. Each edit is saved automatically and written to the audit log with old and new values.
+5. At the end of the shift, staff submits the day for approval.
+W2. Viewing a past day (1-hour read-only session)
+1. Staff chooses "View previous day" and picks a date.
+2. The app requires a short reason and records it.
+3. The server creates a history session that expires 1 hour later.
+4. The past day opens read-only with a visible countdown; edit, delete, import, and paste controls are disabled, and the database rejects any write attempt.
+5. When the hour ends, access closes automatically and the user returns to today's sheet. A new session needs a new reason.
+W3. Day close and approval
+1. Staff submits the day. The sheet becomes read-only for staff.
+2. An Admin reviews totals, flagged rows, and attachments.
+3. The Admin approves (the day locks and balances carry forward) or returns it with a comment (staff can fix it again).
+4. Only the Super Admin can reopen a locked day, and the reason is logged.
+W4. Creating a user
+1. Super Admin enters name, email, role, and language.
+2. The system generates a temporary password and creates the account through the server-side admin API.
+3. The user signs in and must set a new password before anything else.
+4. The Super Admin can reset, disable, or change the role at any time; each change is logged.
+W5. Audit review
+1. Admin or Super Admin opens the audit viewer.
+2. They filter by user, date range, action type, or sheet, and open any entry to see old and new values.
+3. They can open the history of a single cell, and export the results.
+6. Functional Requirements
+Requirements are grouped by module. Priority: M = Must (MVP), S = Should (release 1.1), C = Could (later).
+6.1 Authentication and Accounts
+ID
+	Requirement
+	Priority
+	FR-AUTH-01
+	Users sign in with email and password. There is no public signup page or API.
+	M
+	FR-AUTH-02
+	Only the Super Admin can create accounts, by entering name, email, role, and default language.
+	M
+	FR-AUTH-03
+	The system issues a temporary password and forces a password change on first login.
+	M
+	FR-AUTH-04
+	The Super Admin can reset a password, disable or re-enable an account, and change a role. Each action is logged.
+	M
+	FR-AUTH-05
+	Passwords meet a minimum policy (length 10 or more, mixed characters) and are stored only as hashes by Supabase Auth.
+	M
+	FR-AUTH-06
+	Failed logins are rate-limited, and an account locks for a set time after repeated failures.
+	M
+	FR-AUTH-07
+	Sessions expire after inactivity (default 30 minutes) and on logout; the user can see and end active sessions.
+	M
+	FR-AUTH-08
+	A disabled user is signed out immediately and cannot sign in again, but their records and audit history remain.
+	M
+	FR-AUTH-09
+	Optional two-factor authentication for Admin and Super Admin.
+	S
+	FR-AUTH-10
+	The Super Admin can require sign-in only from approved IP ranges or devices for selected roles.
+	C
+	6.2 Roles, Access Control and Time Rules
+ID
+	Requirement
+	Priority
+	FR-ACC-01
+	The app has exactly three roles: super_admin, admin, staff, with the permissions in section 3.
+	M
+	FR-ACC-02
+	Staff can read and write only entries whose entry date is the current date in the Asia/Amman timezone.
+	M
+	FR-ACC-03
+	"Current date" is decided by the server clock, never by the user's device.
+	M
+	FR-ACC-04
+	Staff can open a past day only through a history session: date chosen, reason entered, valid for 1 hour from creation.
+	M
+	FR-ACC-05
+	During a history session, access is strictly read-only. Insert, update, delete, import, and paste are rejected by the database, not only hidden in the UI.
+	M
+	FR-ACC-06
+	The UI shows the remaining session time. When it expires the view closes and further reads of that date are refused.
+	M
+	FR-ACC-07
+	Every history session (who, which date, reason, start, end) is written to the audit log.
+	M
+	FR-ACC-08
+	Staff cannot extend a session. A new session needs a new reason and a new log record.
+	M
+	FR-ACC-09
+	Admin and Super Admin can read any day. Admin can edit any unlocked day. Locked days are editable only by the Super Admin after reopening.
+	M
+	FR-ACC-10
+	The Super Admin can configure the history session length (default 60 minutes) and the number of sessions per user per day.
+	S
+	FR-ACC-11
+	An Admin can grant a staff member extra access to a single past day for editing, with a reason and an expiry.
+	C
+	6.3 Spreadsheet Grid
+ID
+	Requirement
+	Priority
+	FR-GRID-01
+	Excel-like grid with inline cell editing and keyboard navigation (arrows, Tab, Enter, Esc, F2).
+	M
+	FR-GRID-02
+	Columns have types: text, number, currency, date, dropdown, checkbox, and attachment.
+	M
+	FR-GRID-03
+	Copy and paste between the app and Excel, including multi-cell ranges.
+	M
+	FR-GRID-04
+	Sort, filter, and search within a sheet; freeze header row and first columns.
+	M
+	FR-GRID-05
+	Resize, hide, and reorder columns; set number, currency, and date formats.
+	M
+	FR-GRID-06
+	Undo and redo within the current session.
+	M
+	FR-GRID-07
+	Add, insert, duplicate, and soft-delete rows; select and act on many rows.
+	M
+	FR-GRID-08
+	Autosave of each change within 2 seconds, with a visible saved or saving state and offline-failure warning.
+	M
+	FR-GRID-09
+	Fill-down, fill-right, and series fill.
+	S
+	FR-GRID-10
+	Conditional formatting (for example, highlight amounts above a limit).
+	S
+	FR-GRID-11
+	Cell and range comments.
+	S
+	FR-GRID-12
+	Grouping and subtotals by a column.
+	C
+	6.4 Formulas and Calculations
+ID
+	Requirement
+	Priority
+	FR-CALC-01
+	Support common Excel functions: SUM, AVERAGE, MIN, MAX, COUNT, IF, AND, OR, ROUND, ABS, and arithmetic operators.
+	M
+	FR-CALC-02
+	Support lookups (VLOOKUP, XLOOKUP, INDEX and MATCH) and SUMIF, SUMIFS, COUNTIF.
+	M
+	FR-CALC-03
+	Cell references, ranges, and references between sheets of the same day or workbook.
+	M
+	FR-CALC-04
+	Formulas recalculate instantly and show clear errors (for example, division by zero, invalid reference).
+	M
+	FR-CALC-05
+	Template columns can be defined as calculated and locked, so staff cannot overwrite the formula.
+	M
+	FR-CALC-06
+	Multi-currency: each amount stores its currency and a rate; totals convert to the base currency (JOD by default).
+	S
+	FR-CALC-07
+	Date and text functions (TODAY, DATE, CONCAT, TEXT).
+	S
+	6.5 Daily Sheets, Templates and Finance Workflow
+ID
+	Requirement
+	Priority
+	FR-DAY-01
+	A new daily sheet is created automatically from the active template on the first access of each day.
+	M
+	FR-DAY-02
+	The Super Admin and Admin can create and edit templates: columns, types, validation, formulas, categories.
+	M
+	FR-DAY-03
+	Closing balances of the previous approved day become the opening balances of the next day.
+	M
+	FR-DAY-04
+	A day has a status: Open, Submitted, Returned, Approved (locked). Status changes are logged with the user and time.
+	M
+	FR-DAY-05
+	Staff can submit a day. After submission, staff can no longer edit it.
+	M
+	FR-DAY-06
+	An Admin can approve a submitted day, or return it with a mandatory comment.
+	M
+	FR-DAY-07
+	An approved day is locked. Only the Super Admin can reopen it, with a reason.
+	M
+	FR-DAY-08
+	Validation rules: required fields, allowed values, number ranges, and duplicate detection (same amount, date, and reference).
+	M
+	FR-DAY-09
+	Warnings for unusual entries (for example, amount far above the usual range for that category) shown to the user and flagged for the Admin.
+	S
+	FR-DAY-10
+	Approval thresholds: entries above a set amount need Admin approval before the day can close.
+	S
+	FR-DAY-11
+	Quick-entry form for common transactions, with saved categories and accounts.
+	S
+	FR-DAY-12
+	Support several sheets per day (for example, cash, bank, expenses) inside one workbook.
+	M
+	6.6 Audit and Activity Tracking
+ID
+	Requirement
+	Priority
+	FR-AUD-01
+	Log every operation: sign in, sign out, failed sign in, create, edit, delete, restore, import, export, print, search, view of a past day, status change, and account management.
+	M
+	FR-AUD-02
+	Each record stores: user, role, action, target (sheet, row, cell), old value, new value, timestamp (server time), IP address, device and browser, and request ID.
+	M
+	FR-AUD-03
+	The log is append-only. No role, including the Super Admin, can edit or delete a record through the app or the database API.
+	M
+	FR-AUD-04
+	Audit records are written in the same database transaction as the change, so a change cannot exist without its record.
+	M
+	FR-AUD-05
+	Audit viewer with filters (user, role, action, date range, sheet) and a detail view that shows old and new values.
+	M
+	FR-AUD-06
+	Cell history: from any cell, open every past value with who changed it and when.
+	M
+	FR-AUD-07
+	Visibility: Super Admin sees all records; Admin sees staff records and their own; Staff see only their own activity.
+	M
+	FR-AUD-08
+	Export the filtered audit log to CSV and PDF; the export itself is logged.
+	S
+	FR-AUD-09
+	Alerts for suspicious activity (many failed logins, bulk deletes, access outside working hours).
+	S
+	FR-AUD-10
+	Per-user activity summary (entries made, edits, time active) for Admin review.
+	S
+	6.7 Import, Export and Print
+ID
+	Requirement
+	Priority
+	FR-IO-01
+	Import .xlsx and .csv into a sheet with column mapping, a preview, and a validation report before commit.
+	M
+	FR-IO-02
+	Export a sheet or date range to .xlsx and .csv, keeping formats and formulas where possible.
+	M
+	FR-IO-03
+	Print and export to PDF with a configurable layout, header, footer, and page numbers, in the active language and direction.
+	M
+	FR-IO-04
+	Staff can import and export only today's data. Admin and Super Admin can work with any permitted date range.
+	M
+	FR-IO-05
+	Every import, export, and print is logged with the file name, row count, and user.
+	M
+	FR-IO-06
+	Scheduled reports sent by email as PDF or Excel.
+	S
+	FR-IO-07
+	Full-data export for backup by the Super Admin.
+	S
+	6.8 Localization (English LTR, Arabic RTL)
+ID
+	Requirement
+	Priority
+	FR-I18N-01
+	Every label, message, error, email, and report is available in English and Arabic.
+	M
+	FR-I18N-02
+	Choosing Arabic switches the whole layout to right-to-left (navigation, forms, tables, dialogs, charts, icons that imply direction).
+	M
+	FR-I18N-03
+	Each user has a saved language preference; the language can be switched at any time without losing unsaved work.
+	M
+	FR-I18N-04
+	The spreadsheet grid supports RTL sheet direction (column order and text alignment), set per user or per sheet.
+	M
+	FR-I18N-05
+	Mixed Arabic and English text in cells displays and sorts correctly.
+	M
+	FR-I18N-06
+	Dates, numbers, and currency formats follow the language; the user can choose Western or Arabic-Indic digits.
+	S
+	FR-I18N-07
+	Printed and exported documents keep the correct direction and Arabic font embedding.
+	M
+	6.9 Reports and Dashboards
+ID
+	Requirement
+	Priority
+	FR-RPT-01
+	Daily summary: opening balance, total in, total out, closing balance, and entry count.
+	M
+	FR-RPT-02
+	Monthly summary by category and by user, with a date-range selector.
+	M
+	FR-RPT-03
+	Admin dashboard: today's status per sheet, pending approvals, flagged entries, recent activity.
+	M
+	FR-RPT-04
+	Staff home shows today's own entries and totals.
+	M
+	FR-RPT-05
+	Charts for income vs expense, category share, and trend over time.
+	S
+	FR-RPT-06
+	Pivot-style summaries with group-by and totals.
+	S
+	FR-RPT-07
+	Save report definitions and reuse them.
+	C
+	6.10 Collaboration, Attachments and Notifications
+ID
+	Requirement
+	Priority
+	FR-COL-01
+	Attach files (images, PDF) to an entry; size and type limits are set by the Super Admin; files are stored privately and served by signed links.
+	M
+	FR-COL-02
+	Presence: show who else is viewing or editing the same sheet.
+	S
+	FR-COL-03
+	Two users editing the same sheet see each other's changes within 2 seconds; conflicting edits to one cell are resolved by last write, with both versions kept in cell history.
+	S
+	FR-COL-04
+	Comments with @mentions on rows or cells.
+	S
+	FR-COL-05
+	In-app notifications for day returned, day approved, mention, and flagged entry; optional email.
+	S
+	FR-COL-06
+	Global search across entries, comments, and attachments names, limited to what the user may see.
+	S
+	FR-COL-07
+	Recycle bin: soft-deleted rows can be restored by Admin and Super Admin.
+	M
+	FR-COL-08
+	Version history: Admin can view and restore a sheet to an earlier state of the same day.
+	S
+	6.11 Administration and Settings
+ID
+	Requirement
+	Priority
+	FR-ADM-01
+	User management screen: list, search, create, edit role, reset password, disable and enable.
+	M
+	FR-ADM-02
+	System settings: company name, logo, base currency, timezone, working-day rules, history session length, session timeout.
+	M
+	FR-ADM-03
+	Manage categories, accounts, and dropdown lists used by templates.
+	M
+	FR-ADM-04
+	Manage currencies and exchange rates.
+	S
+	FR-ADM-05
+	Manage branches or departments and limit users to them.
+	C
+	FR-ADM-06
+	System health page: backups status, error rate, active sessions.
+	S
+	7. Non-Functional Requirements
+Security and auditability come first; performance and usability must match what staff expect from Excel.
+7.1 Security
+ID
+	Requirement
+	NFR-SEC-01
+	Row Level Security is enabled on every table. Access rules for role and date are enforced in the database, not in the UI.
+	NFR-SEC-02
+	The Supabase service-role key is used only on the server and never sent to the browser.
+	NFR-SEC-03
+	All traffic uses HTTPS (TLS 1.2 or higher); data is encrypted at rest.
+	NFR-SEC-04
+	Passwords are hashed by Supabase Auth; the app never stores or logs plain passwords.
+	NFR-SEC-05
+	Protection against OWASP Top 10 risks: injection, XSS, CSRF, broken access control, insecure direct object references.
+	NFR-SEC-06
+	Security headers (CSP, HSTS, X-Frame-Options) and rate limiting on login and write endpoints.
+	NFR-SEC-07
+	Uploaded files are scanned or restricted by type and size, and stored in private buckets.
+	NFR-SEC-08
+	Every role and date rule has automated tests that try to break it (for example, staff reading yesterday without a session, or editing during a session).
+	NFR-SEC-09
+	Secrets are kept in environment variables and never committed to the repository.
+	7.2 Auditability and Data Integrity
+ID
+	Requirement
+	NFR-AUD-01
+	Audit records are immutable: database triggers block update and delete, and no application role has that permission.
+	NFR-AUD-02
+	Audit records are retained for at least 7 years (configurable) and cannot be purged by users.
+	NFR-AUD-03
+	All timestamps are stored in UTC and displayed in Asia/Amman.
+	NFR-AUD-04
+	Money values are stored as exact decimals (numeric), never floating point.
+	NFR-AUD-05
+	Business deletions are soft deletes; nothing is physically removed by the app.
+	NFR-AUD-06
+	Optional hash chaining of audit records, so tampering is detectable.
+	7.3 Performance
+ID
+	Requirement
+	Target
+	NFR-PERF-01
+	Page load (first meaningful content) on a normal broadband connection
+	Under 2.5 seconds
+	NFR-PERF-02
+	Grid with 5,000 rows scrolls smoothly (virtualized rendering)
+	60 frames per second feel, no freezing
+	NFR-PERF-03
+	Cell edit saved and confirmed
+	Under 500 ms typical, under 2 seconds worst case
+	NFR-PERF-04
+	Formula recalculation of a typical sheet
+	Under 300 ms
+	NFR-PERF-05
+	Audit viewer query over 1 million records with filters
+	Under 3 seconds
+	NFR-PERF-06
+	Import of 10,000 rows
+	Under 30 seconds
+	NFR-PERF-07
+	Concurrent users supported at launch
+	50, with design headroom to 200
+	7.4 Availability, Backup and Recovery
+ID
+	Requirement
+	Target
+	NFR-AVL-01
+	Uptime during business hours
+	99.5% or higher
+	NFR-AVL-02
+	Automated daily database backups, plus point-in-time recovery on the Supabase plan
+	Retained 30 days or more
+	NFR-AVL-03
+	Recovery point objective (maximum data loss)
+	15 minutes or less
+	NFR-AVL-04
+	Recovery time objective (time to restore service)
+	4 hours or less
+	NFR-AVL-05
+	Restore procedure tested before launch and every 6 months
+	Documented and signed off
+	7.5 Usability, Accessibility and Localization
+ID
+	Requirement
+	NFR-UX-01
+	A staff member who knows Excel can enter data after a 30-minute introduction.
+	NFR-UX-02
+	Full keyboard operation of the grid and all forms.
+	NFR-UX-03
+	Accessibility target WCAG 2.1 AA: contrast, focus states, labels, screen reader support.
+	NFR-UX-04
+	Responsive layout for desktop, tablet, and phone (grid is view-friendly on small screens).
+	NFR-UX-05
+	Arabic text uses a clear web font (such as Cairo or Tajawal) and the layout uses logical CSS properties so RTL and LTR share one codebase.
+	NFR-UX-06
+	Clear, translated error messages that say what to do next.
+	7.6 Compatibility, Maintainability and Operations
+ID
+	Requirement
+	NFR-CMP-01
+	Supported browsers: current and previous major versions of Chrome, Edge, Safari, and Firefox.
+	NFR-MNT-01
+	TypeScript throughout, with linting, formatting, and code review required before merge.
+	NFR-MNT-02
+	Database changes are versioned migrations in source control; staging and production environments are separate.
+	NFR-MNT-03
+	Automated tests: unit tests for formulas and rules, integration tests for RLS, end-to-end tests for the five key workflows.
+	NFR-MNT-04
+	Error monitoring, structured logs, and uptime alerts from launch.
+	NFR-MNT-05
+	Documentation: user guide in English and Arabic, admin guide, and a developer README.
+	NFR-LEG-01
+	Personal and financial data is handled according to Jordanian data-protection law and the organisation's own retention policy.
+	8. Data Model Overview
+The database stores typed finance fields as real columns for fast reports, keeps custom template columns in JSON, and protects every table with Row Level Security.
+Table
+	Purpose
+	Key fields
+	profiles
+	One row per user, linked to Supabase Auth
+	id, full_name, email, role, language, is_active, must_change_password
+	workbooks
+	A group of sheets (for example, one per branch)
+	id, name, template_id, is_active
+	templates
+	Column and rule definitions for daily sheets
+	id, name, columns (JSON), validations, version
+	daily_sheets
+	One sheet per workbook per date
+	id, workbook_id, entry_date, status, opening_balance, closing_balance, submitted_by, approved_by
+	entries
+	The rows users enter
+	id, sheet_id, entry_date, category, amount, currency, reference, data (JSON), created_by, is_deleted
+	cell_changes
+	Change history per cell
+	id, entry_id, column, old_value, new_value, changed_by, changed_at
+	audit_logs
+	Append-only record of every operation
+	id, user_id, role, action, target_type, target_id, old_value, new_value, ip, user_agent, created_at
+	history_sessions
+	The 1-hour read-only access grants
+	id, user_id, target_date, reason, started_at, expires_at
+	day_status_events
+	Submit, return, approve, reopen events
+	id, sheet_id, from_status, to_status, user_id, comment, created_at
+	attachments
+	Files linked to entries
+	id, entry_id, storage_path, file_name, size, uploaded_by
+	comments
+	Comments and mentions
+	id, entry_id, body, author_id, created_at
+	notifications
+	In-app alerts
+	id, user_id, type, payload, read_at
+	settings
+	System configuration
+	key, value, updated_by
+	currencies and rates
+	Currency list and exchange rates
+	code, rate, effective_date
+	Core access rule (enforced by RLS): a staff user may select or write an entry only if its entry_date equals today in Asia/Amman. A staff user may select (never write) an entry for another date only if a history_sessions row exists for that user and date with expires_at later than now.
+9. Technical Architecture
+The browser talks to Supabase directly for reads and live updates, and to a thin Next.js server for privileged actions; Postgres enforces every access and audit rule.
+ system architecture · 3 layers 
+
+system architecture · 3 layers
+The service-role key stays on the server, so user creation and history sessions cannot be forged from the browser.
+Layer
+	Choice
+	Reason
+	Framework
+	Next.js (App Router), TypeScript
+	Server actions keep secrets off the browser
+	Interface
+	Tailwind with logical properties, shadcn/ui
+	One codebase for LTR and RTL
+	Localization
+	next-intl with /en and /ar routes
+	Per-user language and correct direction
+	Grid
+	TanStack Table with virtualization, or AG Grid Community; decide after the RTL prototype
+	Smooth 5,000-row sheets
+	Formulas
+	HyperFormula (check licence terms before adoption)
+	Excel-compatible function set
+	Backend
+	Supabase: Postgres, Auth, Realtime, Storage
+	RLS, triggers, and auth in one platform
+	Hosting
+	Next.js on Vercel or similar; Supabase region with good latency to Jordan
+	Fast page loads
+	Testing
+	Vitest, Playwright, and database policy tests
+	Proves role and date rules hold
+	11. Risks, Assumptions and Dependencies
+The biggest risk is a wrong access rule in the database, so every role and date rule gets automated tests before launch.
+Risks
+Risk
+	Impact
+	Likelihood
+	Mitigation
+	RLS policy mistake lets staff read or edit other days
+	High
+	Medium
+	Policy tests per role and date, security review before launch, deny-by-default policies
+	Grid performance degrades with large sheets
+	Medium
+	Medium
+	Virtualized grid, pagination, load test with 10,000 rows early
+	RTL behaves badly inside the spreadsheet grid
+	Medium
+	High
+	Prototype the RTL grid in Phase 1, choose the grid library only after this test
+	Formula engine misses Excel functions users rely on
+	Medium
+	Medium
+	Collect the functions used in the reference files, test each, add custom functions where needed
+	Users keep working in Excel beside the app
+	High
+	Medium
+	Strong import and export, training, a fixed cut-over date
+	Device clock changes used to dodge the today rule
+	High
+	Low
+	Server-side time only for every date check
+	Audit log grows large and slows queries
+	Medium
+	Medium
+	Partitioning by month, indexes on user, date, and action
+	Grid library licence cost or limits
+	Low
+	Medium
+	Compare open-source and commercial options before the build
+	Assumptions
+* One organisation with one database; branches are optional and handled with workbooks.
+* The working timezone is Asia/Amman, and the base currency is JOD.
+* Staff work from known devices with a stable internet connection (no offline mode in v1).
+* The Super Admin account is held by a trusted person and protected with a strong password and 2FA.
+* The reference Excel files will be shared so templates and formulas can be mapped exactly.
+Dependencies
+* Supabase project on a plan that includes point-in-time recovery.
+* Hosting for Next.js (for example, Vercel) in a region with good latency to Jordan.
+* A formula engine (HyperFormula or similar) and a spreadsheet grid library.
+* An email provider for password and notification emails.
+* The organisation's approval of the day-close and approval rules.
+12. Open Questions and Acceptance Criteria
+Seven decisions need an owner's answer before the build starts, and the MVP is accepted only when every criterion below passes.
+Open questions
+* ☐ Should staff be allowed to edit a row they entered earlier today after submitting the day, or only after an Admin returns it?
+* ☐ Is one workbook enough, or does each branch or cash desk need its own sheets and staff?
+* ☐ Which currencies are used besides JOD, and who sets the exchange rates?
+* ☐ Can staff delete rows today directly, or must deletions go through an Admin?
+* ☐ What is the retention period for audit records and attachments?
+* ☐ Should the 1-hour history session be per date (one date per session) or open all past dates for the hour?
+* ☐ Which Excel functions and report layouts in the reference files must match exactly?
+Acceptance criteria for the MVP
+ID
+	Criterion
+	Verified by
+	AC-01
+	A Super Admin creates a staff account; the staff member signs in and must change the password before using the app.
+	End-to-end test
+	AC-02
+	A staff user can read and edit today's sheet and cannot read any other date by any route (UI, direct API call, or URL).
+	RLS test suite
+	AC-03
+	A staff user opens yesterday through a history session; every write attempt is rejected; access ends exactly 60 minutes after the session starts.
+	End-to-end and RLS tests
+	AC-04
+	Every operation in section 6.6 produces a log record with user, time, old value, and new value; updating or deleting a log record fails for every role.
+	Integration test and manual attempt
+	AC-05
+	An Admin approves a submitted day; it locks, staff cannot edit it, and the closing balance becomes the next day's opening balance.
+	End-to-end test
+	AC-06
+	Switching to Arabic flips the whole interface to RTL, including the grid, forms, and a printed PDF, with no layout breakage.
+	Manual review by an Arabic speaker and screenshot tests
+	AC-07
+	An Excel file from the reference set imports with correct columns and totals, and the exported file opens in Excel with matching totals.
+	Comparison test on real files
+	AC-08
+	A sheet of 5,000 rows scrolls and edits within the performance targets in section 7.3.
+	Load test
+	AC-09
+	A restore from backup is performed in a test environment and completes within the recovery targets.
+	Recovery drill

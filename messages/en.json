@@ -1,0 +1,115 @@
+{
+  "common": {
+    "appName": "Finance Sheets",
+    "save": "Save",
+    "cancel": "Cancel",
+    "loading": "Loading…",
+    "search": "Search",
+    "actions": "Actions",
+    "confirm": "Confirm",
+    "close": "Close",
+    "saving": "Saving…",
+    "saved": "Saved",
+    "saveError": "Save failed",
+    "addRow": "Add row",
+    "remove": "Remove"
+  },
+  "nav": {
+    "today": "Today",
+    "audit": "Audit log",
+    "users": "Users",
+    "settings": "Settings",
+    "history": "View previous day",
+    "signOut": "Sign out"
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "email": "Email",
+    "password": "Password",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "changePassword": "Change password",
+    "passwordChanged": "Password changed",
+    "passwordTooShort": "Password must be at least 10 characters with letters and numbers",
+    "invalidCredentials": "Email or password is incorrect",
+    "mustChangePassword": "You must set a new password before continuing"
+  },
+  "roles": {
+    "super_admin": "Super Admin",
+    "admin": "Admin",
+    "staff": "Staff"
+  },
+  "dayStatus": {
+    "open": "Open",
+    "submitted": "Submitted",
+    "returned": "Returned",
+    "approved": "Approved (locked)"
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "notAllowed": "You are not allowed to perform this action.",
+    "noWorkbook": "No active workbook is configured. Ask an administrator to set one up."
+  },
+  "users": {
+    "title": "Users",
+    "create": "Create user",
+    "fullName": "Full name",
+    "role": "Role",
+    "language": "Language",
+    "created": "User created",
+    "updated": "User updated",
+    "passwordReset": "Password reset; the user must change it at next sign-in",
+    "tempPasswordNote": "Temporary password (shown to the user once):"
+  },
+  "history": {
+    "title": "View previous day",
+    "hint": "Access lasts 60 minutes and is strictly read-only. A reason is recorded in the audit log.",
+    "date": "Date",
+    "reason": "Reason",
+    "reasonRequired": "A reason of at least 3 characters is required",
+    "create": "Open read-only session",
+    "activeUntil": "Read-only access until",
+    "activeWarning": "A history session is active: writes are rejected by the database until it expires.",
+    "noPastAccess": "No active session for this date.",
+    "pastOnly": "History sessions are only available for past days."
+  },
+  "day": {
+    "submit": "Submit day",
+    "approve": "Approve",
+    "return": "Return",
+    "returnComment": "Reason (required)",
+    "reopen": "Reopen",
+    "reopenReason": "Reason (required)"
+  },
+  "grid": {
+    "export": "Export CSV",
+    "print": "Print",
+    "import": "Import CSV",
+    "importDone": "Imported.",
+    "importFailed": "Import failed: check the file and headers."
+  },
+  "audit": {
+    "title": "Audit log",
+    "allActions": "All actions",
+    "apply": "Apply",
+    "time": "Time",
+    "user": "User",
+    "action": "Action",
+    "target": "Target",
+    "changes": "Changes",
+    "ip": "IP",
+    "noRows": "No records.",
+    "actions": {
+      "insert": "Entry added",
+      "update": "Entry edited",
+      "soft_delete": "Entry moved to recycle bin",
+      "submit": "Day submitted",
+      "approve": "Day approved (locked)",
+      "return": "Day returned",
+      "reopen": "Day reopened",
+      "history_session": "History session",
+      "user_created": "User created",
+      "password_changed": "Password changed"
+    }
+  }
+}

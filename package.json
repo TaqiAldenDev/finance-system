@@ -1,0 +1,43 @@
+{
+  "name": "finance-sheets",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "db:reset": "supabase db reset",
+    "db:test": "supabase test db"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.5.2",
+    "@supabase/supabase-js": "^2.45.4",
+    "hyperformula": "^2.7.1",
+    "next": "15.5.27",
+    "next-intl": "^3.25.1",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "server-only": "^0.0.1",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.2",
+    "@types/node": "^22.9.0",
+    "@types/react": "^19.0.1",
+    "@types/react-dom": "^19.0.1",
+    "autoprefixer": "^10.6.1",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "15.5.27",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.15",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.9"
+  },
+  "packageManager": "pnpm@11.5.0"
+}

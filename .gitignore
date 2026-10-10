@@ -1,0 +1,34 @@
+# deps
+/node_modules
+.pnp
+.pnp.js
+
+# next
+/.next/
+/out/
+next-env.d.ts
+
+# env
+.env
+.env*.local
+
+# testing
+/coverage
+/test-results
+/playwright-report
+
+# supabase
+/supabase/.branches
+/supabase/.temp
+
+# misc
+.DS_Store
+*.tsbuildinfo
+
+# ai agent files (local-only, not part of the app source)
+/AGENTs.md
+/AGENT.md
+/CLAUDE.md
+/.claude/
+/.cursor/
+/.opencode/
